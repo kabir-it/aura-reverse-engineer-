@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aura Enforcer | Alpha 0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #02030f;
+    --text: #ffffff;
+    --muted: #9aa3b8;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --glow: rgba(59,130,246,0.25);
+  }
+  /* Personas */
+  body[data-persona="beacon"]   { --accent:#fbbf24; --accent2:#f59e0b; --glow:rgba(251,191,36,.22); --card:rgba(251,191,36,.07); --border:rgba(251,191,36,.25); --muted:#c9bfa3; font-size:112%; }
+  body[data-persona="guardian"] { --bg:#120d08; --accent:#e8a35c; --accent2:#c9763a; --glow:rgba(232,163,92,.16); --text:#f4e6d4; --muted:#b8a58e; --card:rgba(232,163,92,.05); --border:rgba(232,163,92,.18); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 55%, var(--glow), transparent 70%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    transition: background .4s, color .4s;
+  }
+
+  /* NAV */
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 28px 7vw; gap: 24px; flex-wrap: wrap;
+  }
+  .logo {
+    font-weight: 800; font-size: 2rem; letter-spacing: .04em;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    padding: 2px 6px;
+  }
+  .controls { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .ctl { padding: 3px; border-radius: 16px; position: relative; }
+
+  select, .btn, .toggle {
+    font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer;
+    border-radius: 999px; border: 1px solid var(--border); color: var(--text);
+    background: rgba(255,255,255,.05); transition: transform .15s, box-shadow .2s, background .2s;
+  }
+  select { padding: 12px 22px; appearance: none; padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23ffffff' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 18px center; }
+  select option { color: #111; background: #fff; }
+  .btn { padding: 14px 30px; display: inline-block; text-decoration: none; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: linear-gradient(180deg, var(--accent), var(--accent)); color: #fff; border: none; box-shadow: 0 0 22px var(--glow); }
+  body[data-persona="beacon"] .btn-primary { color:#1a1200; }
+  .btn-ghost { background: rgba(255,255,255,.03); }
+  .btn-run.running { background: var(--accent); color:#fff; border:none; box-shadow:0 0 22px var(--glow); }
+  body[data-persona="beacon"] .btn-run.running { color:#1a1200; }
+
+  .toggle { display:flex; align-items:center; gap:12px; padding: 10px 22px; color: var(--muted); }
+  .switch { width: 34px; height: 20px; border-radius: 999px; background: #3a4258; position: relative; transition: background .2s; }
+  .switch::after { content:""; position:absolute; top:3px; left:4px; width:14px; height:14px; border-radius:50%; background:#fff; transition: left .2s; }
+  .toggle[aria-pressed="true"] .switch { background:#22c55e; }
+  .toggle[aria-pressed="true"] .switch::after { left: 16px; }
+  .toggle[aria-pressed="true"] { color: var(--text); }
+
+  /* HERO */
+  .hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; padding: 40px 7vw 80px; align-items: center; }
+  .badge { display:inline-block; padding: 12px 26px; border-radius: 999px; border:1px solid var(--border);
+    color: var(--accent); font-weight: 600; background: rgba(255,255,255,.03); margin-bottom: 36px; }
+  h1 { font-size: clamp(3rem, 7vw, 6rem); line-height: 1.1; font-weight: 800; letter-spacing: -.02em; padding: 6px 4px; }
+  h1 .grad { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; display:inline-block; }
+  .lead { color: var(--muted); font-size: 1.4rem; max-width: 36ch; margin: 40px 0; padding: 4px; }
+  .cta { display:flex; gap: 18px; flex-wrap: wrap; }
+  .cta .ctl { padding: 4px; }
+
+  .status { justify-self: start; margin-top: 120px; padding: 6px; border-radius: 22px; }
+  .status-inner {
+    min-width: 330px; padding: 44px 44px; border-radius: 18px; font-size: 1.5rem; line-height: 1.6;
+    background: rgba(255,255,255,.05); border: 1px solid var(--border); backdrop-filter: blur(8px);
+    transition: opacity .3s;
+  }
+  .status-inner.idle { opacity: .5; }
+
+  /* FEATURES */
+  section.features { padding: 20px 7vw 80px; border-top: 2px solid var(--accent); position: relative; }
+  section.features h2 { font-size: 2.4rem; font-weight: 800; margin: 30px 0 6px; }
+  section.features .sub { color: var(--muted); font-size: 1.35rem; margin-bottom: 40px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+  .card { padding: 34px; border-radius: 26px; background: var(--card); border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+  .card h3 { font-size: 1.7rem; margin-bottom: 14px; display:inline-block; padding:2px 4px; }
+  .card p { color: var(--muted); font-size: 1.2rem; padding:2px 4px; }
+
+  footer { text-align: center; color: var(--muted); padding: 50px 7vw 70px; font-size: 1.1rem; }
+
+  /* ===== AURA ENFORCER OVERLAY (simulated) ===== */
+  body.enforcing [data-label] {
+    position: relative; outline: 2px solid var(--accent); outline-offset: 0; border-radius: 14px;
+    box-shadow: 0 0 18px var(--glow);
+  }
+  body.enforcing [data-label]::before,
+  body.enforcing [data-label]::after {
+    position: absolute; font-size: 12px; font-weight: 700; letter-spacing: .02em; line-height: 1; z-index: 5; pointer-events:none;
+  }
+  body.enforcing [data-label]::before {
+    content: attr(data-label); top: -13px; left: 10px; text-transform: uppercase;
+    background: var(--accent); color: #fff; padding: 6px 10px; border-radius: 6px;
+  }
+  body[data-persona="beacon"].enforcing [data-label]::before { color: #1a1200; }
+  body.enforcing [data-tag]::after {
+    content: attr(data-tag); bottom: -22px; right: 6px;
+    background: #000; color: #fff; padding: 5px 8px; border-radius: 6px;
+  }
+  body.enforcing .card[data-label] { outline-width: 2px; }
+  body.enforcing .status-inner { opacity: 1; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .status { margin-top: 20px; }
+  }
+</style>
+</head>
+<body data-persona="voyager">
+
+  <nav>
+    <div class="logo" data-label="UI Element" data-tag="Optimized">AURA</div>
+    <div class="controls">
+      <div class="ctl" data-label="Interaction" data-tag="Target Boosted">
+        <select id="persona" aria-label="Accessibility persona">
+          <option value="voyager">The Voyager (Color Blind)</option>
+          <option value="beacon">The Beacon (Low Vision)</option>
+          <option value="guardian">The Guardian (Eye Strain)</option>
+        </select>
+      </div>
+      <div class="ctl" data-label="Interaction" data-tag="Target Boosted">
+        <button class="btn btn-run" id="run">Simulate Aura Enforcer</button>
+      </div>
+      <div class="ctl" data-label="Interaction" data-tag="Target Boosted">
+        <button class="toggle" id="clarify" aria-pressed="false"><span class="switch"></span>Clarify Content</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div>
+        <span class="badge">Aura Enforcer | Alpha 0.1</span>
+        <h1 data-label="Structure" data-tag="Readable" id="headline">The Guardian of <span class="grad">Accessibility.</span></h1>
+        <p class="lead" id="lead">Intelligence that lives between your windows. Aura identifies, cleans, and fixes digital barriers in real-time, bringing inclusive experiences to every application on your machine.</p>
+        <div class="cta">
+          <div class="ctl" data-label="Interaction" data-tag="Target Boosted"><a class="btn btn-primary" href="#">Download for Windows</a></div>
+          <div class="ctl" data-label="Interaction" data-tag="Target Boosted"><a class="btn btn-ghost" href="#">Watch the Vision</a></div>
+        </div>
+      </div>
+
+      <div class="status" data-label="UI Element" data-tag="Optimized">
+        <div class="status-inner" id="status">
+          Scanning: Notepad.exe<br>
+          Fixes Applied: <span id="fixes">12</span><br>
+          Mode: <span id="mode">ENFORCING</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" data-label="Structure">
+      <h2 id="featTitle">Universal Empowerment</h2>
+      <p class="sub" id="featSub">Accessibility for the web, legacy apps, and everything in between.</p>
+      <div class="grid">
+        <article class="card" data-label="Content Box" data-tag="Semantic">
+          <h3 data-label="Structure" data-tag="Readable">Visual Enforcement</h3>
+          <p id="c1">Real-time contrast correction, icon labelling, and touch-target enlargement applied to any window on your screen.</p>
+        </article>
+        <article class="card" data-label="Content Box" data-tag="Semantic">
+          <h3 data-label="Structure" data-tag="Readable">Aura Narrative</h3>
+          <p id="c2">A context-aware, localized TTS engine that describes the screen as you move, filtering out the noise of traditional screen readers.</p>
+        </article>
+        <article class="card" data-label="Content Box" data-tag="Semantic">
+          <h3 data-label="Structure" data-tag="Readable">Vision Core</h3>
+          <p id="c3">100% on-device AI inference. Your screen data never leaves your machine. Privacy is an accessibility right.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2026 Aura Systems. Part of the Tworam Ecosystem.</footer>
+
+<script>
+  const body = document.body;
+  const run = document.getElementById('run');
+  const clarify = document.getElementById('clarify');
+  const persona = document.getElementById('persona');
+  const statusBox = document.getElementById('status');
+  const fixesEl = document.getElementById('fixes');
+  const modeEl = document.getElementById('mode');
+
+  const apps = ['Notepad.exe', 'Calculator.exe', 'Explorer.exe', 'Settings.exe'];
+  let timer = null, fixes = 12, appIdx = 0;
+
+  // Simulated enforcement: shows overlays + ticking stats
+  function setRunning(on) {
+    body.classList.toggle('enforcing', on);
+    run.classList.toggle('running', on);
+    run.textContent = on ? 'Stop Enforcement' : 'Simulate Aura Enforcer';
+    statusBox.classList.toggle('idle', !on);
+    modeEl.textContent = on ? 'ENFORCING' : 'IDLE';
+    clearInterval(timer);
+    if (on) {
+      timer = setInterval(() => {
+        fixes += Math.floor(Math.random() * 3);
+        if (Math.random() > .6) appIdx = (appIdx + 1) % apps.length;
+        fixesEl.textContent = fixes;
+        statusBox.firstChild.textContent = 'Scanning: ' + apps[appIdx];
+      }, 1800);
+    }
+  }
+  run.addEventListener('click', () => setRunning(!body.classList.contains('enforcing')));
+  setRunning(false);
+
+  // Persona switcher
+  persona.addEventListener('change', e => { body.dataset.persona = e.target.value; });
+
+  // Clarify Content: swaps in plain-language copy
+  const copy = {
+    off: {
+      headline: 'The Guardian of <span class="grad">Accessibility.</span>',
+      lead: 'Intelligence that lives between your windows. Aura identifies, cleans, and fixes digital barriers in real-time, bringing inclusive experiences to every application on your machine.',
+      featTitle: 'Universal Empowerment',
+      featSub: 'Accessibility for the web, legacy apps, and everything in between.',
+      c1: 'Real-time contrast correction, icon labelling, and touch-target enlargement applied to any window on your screen.',
+      c2: 'A context-aware, localized TTS engine that describes the screen as you move, filtering out the noise of traditional screen readers.',
+      c3: '100% on-device AI inference. Your screen data never leaves your machine. Privacy is an accessibility right.'
+    },
+    on: {
+      headline: 'The Guardian for <span class="grad">everyone.</span>',
+      lead: 'Aura helps you use any app easily. It finds and fixes hard parts on your screen in real-time, keeping your data private.',
+      featTitle: 'Universal Empowerment',
+      featSub: 'Accessibility for the web, legacy apps, and everything in between.',
+      c1: 'Auto-corrects low contrast, identifies unlabelled icons, and enlarges tiny touch targets.',
+      c2: 'A smart, localized TTS engine that describes the screen as you move, without the noise of traditional screen readers.',
+      c3: '100% On-device AI. Your screen data never leaves your computer. Privacy is an accessibility right.'
+    }
+  };
+  clarify.addEventListener('click', () => {
+    const on = clarify.getAttribute('aria-pressed') !== 'true';
+    clarify.setAttribute('aria-pressed', on);
+    const t = copy[on ? 'on' : 'off'];
+    document.getElementById('headline').innerHTML = t.headline;
+    document.getElementById('lead').textContent = t.lead;
+    document.getElementById('featTitle').textContent = t.featTitle;
+    document.getElementById('featSub').textContent = t.featSub;
+    ['c1','c2','c3'].forEach(id => document.getElementById(id).textContent = t[id]);
+  });
+</script>
+</body>
+</html>
